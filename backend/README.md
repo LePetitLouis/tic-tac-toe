@@ -1,4 +1,4 @@
-# Getting Started with Nodejs Express Sockect
+# Getting Started with Nodejs Express Socket
 
 ## Available Scripts
 
