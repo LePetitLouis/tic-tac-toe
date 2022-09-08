@@ -1,8 +1,9 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import gameContext from "../../gameContext";
 import gameService from "../../services/gameService";
 import socketService from "../../services/socketService";
+import { WaitingPlayer } from "./WaitingPlayer";
 
 const GameContainer = styled.div`
   display: flex;
@@ -13,34 +14,6 @@ const GameContainer = styled.div`
 const RowContainer = styled.div`
   width: 100%;
   display: flex;
-`;
-
-const WaitingPlayer = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
-`;
-
-const Loader = styled.div`
-  border: 8px solid #f3f3f3;
-  border-radius: 50%;
-  border-top: 8px solid #3498db;
-  width: 60px;
-  height: 60px;
-  -webkit-animation: spin 2s linear infinite; /* Safari */
-  animation: spin 2s linear infinite;
-
-  @-webkit-keyframes spin {
-    0% { -webkit-transform: rotate(0deg); }
-    100% { -webkit-transform: rotate(360deg); }
-  }
-  
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
 `;
 
 interface ICellProps {
@@ -98,6 +71,7 @@ export type IPlayMatrix = Array<Array<string | null>>;
 export interface IStartGame {
   start: boolean;
   symbol: "x" | "o";
+  playerNameOpponent: string
 }
 
 export function Game() {
@@ -114,7 +88,8 @@ export function Game() {
     isPlayerTurn,
     setGameStarted,
     isGameStarted,
-    roomId
+    playerNameOpponent,
+    setPlayerNameOpponent
   } = useContext(gameContext);
 
   const checkGameState = (matrix: IPlayMatrix) => {
@@ -201,24 +176,15 @@ export function Game() {
       gameService.onStartGame(socketService.socket, (options) => {
         setGameStarted(true);
         setPlayerSymbol(options.symbol);
+        setPlayerNameOpponent(options.playerNameOpponent)
         if (options.start) setPlayerTurn(true);
         else setPlayerTurn(false);
       });
   };
 
-  const clipboard = () => {
-    const link = `http://localhost:3000/${roomId}`;
-    navigator.clipboard.writeText(link).then(function() {
-      console.log('Async: Copying to clipboard was successful!');
-    }, function(err) {
-      console.error('Async: Could not copy text: ', err);
-    });
-  }
-
   const handleGameWin = () => {
     if (socketService.socket)
       gameService.onGameWin(socketService.socket, (message) => {
-        console.log("Here", message);
         setPlayerTurn(false);
         alert(message);
       });
@@ -232,41 +198,38 @@ export function Game() {
 
   return (
     <GameContainer>
-      {!isGameStarted && (
-        <WaitingPlayer>
-          <Loader />
-          <h2>En attente d'un autre joueur pour commencer la partie</h2>
-
-          <a href="#" onClick={clipboard}>Copier le lien</a>
-        </WaitingPlayer>
-        
-      )}
+      {!isGameStarted && ( <WaitingPlayer />)}
       {(!isGameStarted || !isPlayerTurn) && <PlayStopper />}
-      { isGameStarted && matrix.map((row, rowIdx) => {
-        return (
-          <RowContainer>
-            {row.map((column, columnIdx) => (
-              <Cell
-                borderRight={columnIdx < 2}
-                borderLeft={columnIdx > 0}
-                borderBottom={rowIdx < 2}
-                borderTop={rowIdx > 0}
-                onClick={() =>
-                  updateGameMatrix(columnIdx, rowIdx, playerSymbol)
-                }
-              >
-                {column && column !== "null" ? (
-                  column === "x" ? (
-                    <X />
-                  ) : (
-                    <O />
-                  )
-                ) : null}
-              </Cell>
-            ))}
-          </RowContainer>
-        );
-      })}
+      { isGameStarted && (
+        <div>
+          { isPlayerTurn ? <h2 style={{textAlign: 'center', marginBottom: '50px'}}>C'est à votre tour</h2> : <h2 style={{textAlign: 'center', marginBottom: '50px'}}>C'est au tour de {playerNameOpponent}</h2> }
+          { matrix.map((row, rowIdx) => {
+            return (
+              <RowContainer>
+                {row.map((column, columnIdx) => (
+                  <Cell
+                    borderRight={columnIdx < 2}
+                    borderLeft={columnIdx > 0}
+                    borderBottom={rowIdx < 2}
+                    borderTop={rowIdx > 0}
+                    onClick={() =>
+                      updateGameMatrix(columnIdx, rowIdx, playerSymbol)
+                    }
+                  >
+                    {column && column !== "null" ? (
+                      column === "x" ? (
+                        <X />
+                      ) : (
+                        <O />
+                      )
+                    ) : null}
+                  </Cell>
+                ))}
+              </RowContainer>
+            );
+          })}
+        </div>
+      )}
     </GameContainer>
   );
 }

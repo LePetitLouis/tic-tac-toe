@@ -2,12 +2,16 @@ import { Socket } from "socket.io-client";
 import { IPlayMatrix, IStartGame } from "../../components/game";
 
 class GameService {
-  public async joinGameRoom(socket: Socket, roomId: string): Promise<boolean> {
+  public async joinGameRoom(socket: Socket, playerName: string, roomId?: string): Promise<boolean> {
     return new Promise((rs, rj) => {
-      socket.emit("join_game", { roomId });
-      socket.on("room_joined", () => rs(true));
+      socket.emit("join_game", { playerName, roomId });
       socket.on("room_join_error", ({ error }) => rj(error));
+      rs(true);
     });
+  }
+
+  public async roomJoined(socket: Socket, listiner: (roomId: string) => void) {
+    socket.on("room_joined", ({ roomId }) => listiner(roomId));
   }
 
   public async updateGame(socket: Socket, gameMatrix: IPlayMatrix) {

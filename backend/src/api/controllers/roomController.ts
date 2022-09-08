@@ -7,38 +7,65 @@ import {
 } from "socket-controllers";
 import { Server, Socket } from "socket.io";
 
+interface joinGameBody {
+  roomId?: string,
+  playerName: string
+}
+
+interface Room {
+  id: string;
+  playerName: string,
+  playerNameOpponent?: string
+}
+
+let rooms: Room[] = []
+
 @SocketController()
 export class RoomController {
   @OnMessage("join_game")
   public async joinGame(
     @SocketIO() io: Server,
     @ConnectedSocket() socket: Socket,
-    @MessageBody() message: any
+    @MessageBody() message: joinGameBody
   ) {
-    console.log("New User joining room: ", message);
 
-    const connectedSockets = io.sockets.adapter.rooms.get(message.roomId);
-    const socketRooms = Array.from(socket.rooms.values()).filter(
-      (r) => r !== socket.id
-    );
+    let room: Room = null;
 
-    if (
-      socketRooms.length > 0 ||
-      (connectedSockets && connectedSockets.size === 2)
-    ) {
-      socket.emit("room_join_error", {
-        error: "Room is full please choose another room to play!",
-      });
+    console.log(message)
+
+    if (!message.roomId) {
+      room = createRoom(message);
+      console.log(`[create room ] - ${room.id} - ${message.playerName}`);
     } else {
-      await socket.join(message.roomId);
-      socket.emit("room_joined");
+      room = rooms.find(r => r.id === message.roomId);
 
-      if (io.sockets.adapter.rooms.get(message.roomId).size === 2) {
-        socket.emit("start_game", { start: true, symbol: "x" });
-        socket
-          .to(message.roomId)
-          .emit("start_game", { start: false, symbol: "o" });
+      if (room === undefined) {
+        socket.emit("room_join_error", {
+          error: "Room is full please choose another room to play!",
+        });
       }
+
+      message.roomId = room.id;
+      room.playerNameOpponent = message.playerName;
+    }
+
+    await socket.join(room.id);
+    socket.emit("room_joined", { roomId: room.id });
+
+    if (room.playerName && room.playerNameOpponent) {
+      socket.emit("start_game", { start: true, symbol: "x", playerNameOpponent: room.playerName });
+      socket.to(room.id).emit('start_game', { start: false, symbol: "o", playerNameOpponent: room.playerNameOpponent });
     }
   }
+}
+
+const createRoom = (player: joinGameBody) => {
+  const room = { id: roomId(), playerName: player.playerName };
+  rooms.push(room);
+
+  return room;
+}
+
+const roomId = () => {
+  return Math.random().toString(16).slice(2);
 }

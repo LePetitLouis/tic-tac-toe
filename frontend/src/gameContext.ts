@@ -9,6 +9,8 @@ export interface IGameContextProps {
   setPlayerSymbol: (symbol: "x" | "o") => void;
   playerName: string;
   setPlayerName: (name: string) => void;
+  playerNameOpponent: string,
+  setPlayerNameOpponent: (name: string) => void;
   isPlayerTurn: boolean;
   setPlayerTurn: (turn: boolean) => void;
   isGameStarted: boolean;
@@ -24,6 +26,8 @@ const defaultState: IGameContextProps = {
   setPlayerSymbol: () => {},
   playerName: "",
   setPlayerName: () => {},
+  playerNameOpponent: "",
+  setPlayerNameOpponent: () => {},
   isPlayerTurn: false,
   setPlayerTurn: () => {},
   isGameStarted: false,

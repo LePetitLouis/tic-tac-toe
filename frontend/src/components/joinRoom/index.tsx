@@ -70,6 +70,8 @@ export function JoinRoom(props: IJoinRoomProps) {
     // connect to socket
     connectSocket();
 
+    setPlayerName(playerName);
+
     const socket = socketService.socket;
     if (!playerName || playerName.trim() === "" || !socket) return;
 
@@ -78,7 +80,7 @@ export function JoinRoom(props: IJoinRoomProps) {
     if (id) {
       // join room already created
       const joined = await gameService
-        .joinGameRoom(socket, id)
+        .joinGameRoom(socket, playerName, id)
         .catch((err) => {
           alert(err);
         });
@@ -86,14 +88,16 @@ export function JoinRoom(props: IJoinRoomProps) {
       if (joined) setInRoom(true);
     } else {
       // create room
-      const roomId = Math.random().toString(16).slice(2)
-      setRoomId(roomId)
-
       const joined = await gameService
-        .joinGameRoom(socket, roomId)
+        .joinGameRoom(socket, playerName)
         .catch((err) => {
           alert(err);
         });
+
+      // set roomId
+      await gameService.roomJoined(socket, (options) => {
+        setRoomId(options)
+      })
 
       if (joined) setInRoom(true);
     }

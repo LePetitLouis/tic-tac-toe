@@ -32,6 +32,7 @@ function App() {
   const [roomId, setRoomId] = useState<string>("");
   const [playerSymbol, setPlayerSymbol] = useState<"x" | "o">("x");
   const [playerName, setPlayerName] = useState<string>("")
+  const [playerNameOpponent, setPlayerNameOpponent] = useState<string>("")
   const [isPlayerTurn, setPlayerTurn] = useState<boolean>(false);
   const [isGameStarted, setGameStarted] = useState<boolean>(false);
 
@@ -44,6 +45,8 @@ function App() {
     setPlayerSymbol,
     playerName,
     setPlayerName,
+    playerNameOpponent,
+    setPlayerNameOpponent,
     isPlayerTurn,
     setPlayerTurn,
     isGameStarted,
