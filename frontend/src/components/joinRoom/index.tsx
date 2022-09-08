@@ -1,4 +1,5 @@
 import React, { useContext, useState } from "react";
+import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import gameContext from "../../gameContext";
 import gameService from "../../services/gameService";
@@ -21,56 +22,81 @@ const RoomIdInput = styled.input`
   width: 20em;
   font-size: 17px;
   outline: none;
-  border: 1px solid #8e44ad;
-  border-radius: 3px;
-  padding: 0 10px;
+  border: 1px solid #26150f;
+  border-radius: 10px;
+  padding: 18px 10px;
 `;
 
 const JoinButton = styled.button`
   outline: none;
-  background-color: #8e44ad;
+  background-color: #8dc3f2;
   color: #fff;
   font-size: 17px;
   border: 2px solid transparent;
   border-radius: 5px;
-  padding: 4px 18px;
+  padding: 8px 18px;
   transition: all 230ms ease-in-out;
   margin-top: 1em;
   cursor: pointer;
 
   &:hover {
     background-color: transparent;
-    border: 2px solid #8e44ad;
-    color: #8e44ad;
+    border: 2px solid #8dc3f2;
+    color: #8dc3f2;
   }
 `;
 
 export function JoinRoom(props: IJoinRoomProps) {
-  const [roomName, setRoomName] = useState("");
-  const [isJoining, setJoining] = useState(false);
+  const [playerName, setPlayerName] = useState<string>("");
+  const [isJoining, setJoining] = useState<boolean>(false);
 
-  const { setInRoom, isInRoom } = useContext(gameContext);
+  const { id } = useParams();
+  const { setInRoom, setRoomId } = useContext(gameContext);
 
-  const handleRoomNameChange = (e: React.ChangeEvent<any>) => {
+  const connectSocket = async () => {
+    await socketService.connect("http://localhost:9000").catch((err) => {
+      console.log("Error: ", err);
+    });
+  };
+
+  const handlePlayerNameChange = (e: React.ChangeEvent<any>) => {
     const value = e.target.value;
-    setRoomName(value);
+    setPlayerName(value);
   };
 
   const joinRoom = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // connect to socket
+    connectSocket();
+
     const socket = socketService.socket;
-    if (!roomName || roomName.trim() === "" || !socket) return;
+    if (!playerName || playerName.trim() === "" || !socket) return;
 
     setJoining(true);
 
-    const joined = await gameService
-      .joinGameRoom(socket, roomName)
-      .catch((err) => {
-        alert(err);
-      });
+    if (id) {
+      // join room already created
+      const joined = await gameService
+        .joinGameRoom(socket, id)
+        .catch((err) => {
+          alert(err);
+        });
 
-    if (joined) setInRoom(true);
+      if (joined) setInRoom(true);
+    } else {
+      // create room
+      const roomId = Math.random().toString(16).slice(2)
+      setRoomId(roomId)
+
+      const joined = await gameService
+        .joinGameRoom(socket, roomId)
+        .catch((err) => {
+          alert(err);
+        });
+
+      if (joined) setInRoom(true);
+    }
 
     setJoining(false);
   };
@@ -78,14 +104,14 @@ export function JoinRoom(props: IJoinRoomProps) {
   return (
     <form onSubmit={joinRoom}>
       <JoinRoomContainer>
-        <h4>Entrer l'id de la room pour rejoindre la partie</h4>
+        <h4>Entrez votre pseudo</h4>
         <RoomIdInput
-          placeholder="Room ID"
-          value={roomName}
-          onChange={handleRoomNameChange}
+          placeholder="Pseudo"
+          value={playerName}
+          onChange={handlePlayerNameChange}
         />
         <JoinButton type="submit" disabled={isJoining}>
-          {isJoining ? "Chargement..." : "Rejoindre"}
+          {isJoining ? "Chargement..." : "C'est parti !"}
         </JoinButton>
       </JoinRoomContainer>
     </form>

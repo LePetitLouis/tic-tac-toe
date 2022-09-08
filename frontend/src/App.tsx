@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import "./App.css";
-import { io } from "socket.io-client";
-import socketService from "./services/socketService";
 import { JoinRoom } from "./components/joinRoom";
 import GameContext, { IGameContextProps } from "./gameContext";
 import { Game } from "./components/game";
@@ -18,7 +16,7 @@ const AppContainer = styled.div`
 
 const WelcomeText = styled.h1`
   margin: 0;
-  color: #8e44ad;
+  color: #26150F;
 `;
 
 const MainContainer = styled.div`
@@ -30,28 +28,22 @@ const MainContainer = styled.div`
 `;
 
 function App() {
-  const [isInRoom, setInRoom] = useState(false);
+  const [isInRoom, setInRoom] = useState<boolean>(false);
+  const [roomId, setRoomId] = useState<string>("");
   const [playerSymbol, setPlayerSymbol] = useState<"x" | "o">("x");
-  const [isPlayerTurn, setPlayerTurn] = useState(false);
-  const [isGameStarted, setGameStarted] = useState(false);
-
-  const connectSocket = async () => {
-    const socket = await socketService
-      .connect("http://localhost:9000")
-      .catch((err) => {
-        console.log("Error: ", err);
-      });
-  };
-
-  useEffect(() => {
-    connectSocket();
-  }, []);
+  const [playerName, setPlayerName] = useState<string>("")
+  const [isPlayerTurn, setPlayerTurn] = useState<boolean>(false);
+  const [isGameStarted, setGameStarted] = useState<boolean>(false);
 
   const gameContextValue: IGameContextProps = {
     isInRoom,
     setInRoom,
+    roomId,
+    setRoomId,
     playerSymbol,
     setPlayerSymbol,
+    playerName,
+    setPlayerName,
     isPlayerTurn,
     setPlayerTurn,
     isGameStarted,

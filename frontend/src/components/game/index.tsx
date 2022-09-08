@@ -7,13 +7,40 @@ import socketService from "../../services/socketService";
 const GameContainer = styled.div`
   display: flex;
   flex-direction: column;
-  font-family: "Zen Tokyo Zoo", cursive;
   position: relative;
 `;
 
 const RowContainer = styled.div`
   width: 100%;
   display: flex;
+`;
+
+const WaitingPlayer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+`;
+
+const Loader = styled.div`
+  border: 8px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 8px solid #3498db;
+  width: 60px;
+  height: 60px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+
+  @-webkit-keyframes spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
 `;
 
 interface ICellProps {
@@ -29,12 +56,11 @@ const Cell = styled.div<ICellProps>`
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 20px;
   cursor: pointer;
-  border-top: ${({ borderTop }) => borderTop && "3px solid #8e44ad"};
-  border-left: ${({ borderLeft }) => borderLeft && "3px solid #8e44ad"};
-  border-bottom: ${({ borderBottom }) => borderBottom && "3px solid #8e44ad"};
-  border-right: ${({ borderRight }) => borderRight && "3px solid #8e44ad"};
+  border-top: ${({ borderTop }) => borderTop && "3px solid #737372"};
+  border-left: ${({ borderLeft }) => borderLeft && "3px solid #737372"};
+  border-bottom: ${({ borderBottom }) => borderBottom && "3px solid #737372"};
+  border-right: ${({ borderRight }) => borderRight && "3px solid #737372"};
   transition: all 270ms ease-in-out;
 
   &:hover {
@@ -54,7 +80,7 @@ const PlayStopper = styled.div`
 
 const X = styled.span`
   font-size: 100px;
-  color: #8e44ad;
+  color: #8C1127;
   &::after {
     content: "X";
   }
@@ -62,7 +88,7 @@ const X = styled.span`
 
 const O = styled.span`
   font-size: 100px;
-  color: #8e44ad;
+  color: #D9B7B0;
   &::after {
     content: "O";
   }
@@ -88,6 +114,7 @@ export function Game() {
     isPlayerTurn,
     setGameStarted,
     isGameStarted,
+    roomId
   } = useContext(gameContext);
 
   const checkGameState = (matrix: IPlayMatrix) => {
@@ -179,6 +206,15 @@ export function Game() {
       });
   };
 
+  const clipboard = () => {
+    const link = `http://localhost:3000/${roomId}`;
+    navigator.clipboard.writeText(link).then(function() {
+      console.log('Async: Copying to clipboard was successful!');
+    }, function(err) {
+      console.error('Async: Could not copy text: ', err);
+    });
+  }
+
   const handleGameWin = () => {
     if (socketService.socket)
       gameService.onGameWin(socketService.socket, (message) => {
@@ -197,10 +233,16 @@ export function Game() {
   return (
     <GameContainer>
       {!isGameStarted && (
-        <h2>En attente d'un autre joueur pour commencer la partie</h2>
+        <WaitingPlayer>
+          <Loader />
+          <h2>En attente d'un autre joueur pour commencer la partie</h2>
+
+          <a href="#" onClick={clipboard}>Copier le lien</a>
+        </WaitingPlayer>
+        
       )}
       {(!isGameStarted || !isPlayerTurn) && <PlayStopper />}
-      {matrix.map((row, rowIdx) => {
+      { isGameStarted && matrix.map((row, rowIdx) => {
         return (
           <RowContainer>
             {row.map((column, columnIdx) => (
