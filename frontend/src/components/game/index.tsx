@@ -3,7 +3,9 @@ import styled from "styled-components";
 import gameContext from "../../gameContext";
 import gameService from "../../services/gameService";
 import socketService from "../../services/socketService";
+
 import { WaitingPlayer } from "./WaitingPlayer";
+import { ResultModal } from "../modals/ResultModal";
 
 const GameContainer = styled.div`
   display: flex;
@@ -80,6 +82,8 @@ export function Game() {
     [null, null, null],
     [null, null, null],
   ]);
+  const [openModal, setOpenModal] = useState<boolean>(false);
+  const [textModal, setTextModal] = useState<string>("");
 
   const {
     playerSymbol,
@@ -152,10 +156,12 @@ export function Game() {
       const [currentPlayerWon, otherPlayerWon] = checkGameState(newMatrix);
       if (currentPlayerWon && otherPlayerWon) {
         gameService.gameWin(socketService.socket, "Egalité!");
-        alert("Egalité!");
+        setTextModal("Egalité!");
+        setOpenModal(true);
       } else if (currentPlayerWon && !otherPlayerWon) {
         gameService.gameWin(socketService.socket, "Tu as perdu!");
-        alert("Tu as gagné!");
+        setTextModal("Tu as gagné!");
+        setOpenModal(true);
       }
 
       setPlayerTurn(false);
@@ -165,6 +171,7 @@ export function Game() {
   const handleGameUpdate = () => {
     if (socketService.socket)
       gameService.onGameUpdate(socketService.socket, (newMatrix) => {
+        console.log('ON GAME UPDATE')
         setMatrix(newMatrix);
         checkGameState(newMatrix);
         setPlayerTurn(true);
@@ -176,7 +183,7 @@ export function Game() {
       gameService.onStartGame(socketService.socket, (options) => {
         setGameStarted(true);
         setPlayerSymbol(options.symbol);
-        setPlayerNameOpponent(options.playerNameOpponent)
+        if (options.playerNameOpponent) setPlayerNameOpponent(options.playerNameOpponent)
         if (options.start) setPlayerTurn(true);
         else setPlayerTurn(false);
       });
@@ -186,9 +193,21 @@ export function Game() {
     if (socketService.socket)
       gameService.onGameWin(socketService.socket, (message) => {
         setPlayerTurn(false);
-        alert(message);
+        setTextModal(message);
+        setOpenModal(true);
       });
   };
+
+  const playAgain = async() => {
+    // Reset matrix
+    const newMatrix = [
+      [null, null, null],
+      [null, null, null],
+      [null, null, null],
+    ];
+    setMatrix(newMatrix);
+    setOpenModal(false);
+  }
 
   useEffect(() => {
     handleGameUpdate();
@@ -198,7 +217,8 @@ export function Game() {
 
   return (
     <GameContainer>
-      {!isGameStarted && ( <WaitingPlayer />)}
+      { openModal && (<ResultModal text={textModal} closeModal={() => setOpenModal(false)} playAgain={playAgain} />) }
+      {!isGameStarted && (<WaitingPlayer />)}
       {(!isGameStarted || !isPlayerTurn) && <PlayStopper />}
       { isGameStarted && (
         <div>

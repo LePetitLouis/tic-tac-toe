@@ -22,7 +22,7 @@ export class GameController {
   public async updateGame(
     @SocketIO() io: Server,
     @ConnectedSocket() socket: Socket,
-    @MessageBody() message: any
+    @MessageBody() message: string
   ) {
     const gameRoom = this.getSocketGameRoom(socket);
     socket.to(gameRoom).emit("on_game_update", message);
@@ -32,9 +32,25 @@ export class GameController {
   public async gameWin(
     @SocketIO() io: Server,
     @ConnectedSocket() socket: Socket,
-    @MessageBody() message: any
+    @MessageBody() message: string
   ) {
     const gameRoom = this.getSocketGameRoom(socket);
     socket.to(gameRoom).emit("on_game_win", message);
+  }
+
+  @OnMessage("play_again")
+  public async playAgain(
+    @SocketIO() io: Server,
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() message: string[]
+  ) {
+    const gameRoom = this.getSocketGameRoom(socket);
+    if (message.length === 2) {
+      io.to(gameRoom).emit("on_play_again", { again: true, players: message });
+      socket.emit("start_game", { start: true, symbol: "x" });
+      socket.to(gameRoom).emit('start_game', { start: false, symbol: "o" });
+    } else {
+      io.to(gameRoom).emit("on_play_again", { again: false, players: message });
+    }
   }
 }

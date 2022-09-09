@@ -31,8 +31,6 @@ export class RoomController {
 
     let room: Room = null;
 
-    console.log(message)
-
     if (!message.roomId) {
       room = createRoom(message);
       console.log(`[create room ] - ${room.id} - ${message.playerName}`);

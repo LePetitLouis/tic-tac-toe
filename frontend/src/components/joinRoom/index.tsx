@@ -47,11 +47,11 @@ const JoinButton = styled.button`
 `;
 
 export function JoinRoom(props: IJoinRoomProps) {
-  const [playerName, setPlayerName] = useState<string>("");
+  const [player, setPlayer] = useState<string>("");
   const [isJoining, setJoining] = useState<boolean>(false);
 
   const { id } = useParams();
-  const { setInRoom, setRoomId } = useContext(gameContext);
+  const { setInRoom, setRoomId, setPlayerName } = useContext(gameContext);
 
   const connectSocket = async () => {
     await socketService.connect("http://localhost:9000").catch((err) => {
@@ -61,7 +61,7 @@ export function JoinRoom(props: IJoinRoomProps) {
 
   const handlePlayerNameChange = (e: React.ChangeEvent<any>) => {
     const value = e.target.value;
-    setPlayerName(value);
+    setPlayer(value);
   };
 
   const joinRoom = async (e: React.FormEvent) => {
@@ -70,17 +70,17 @@ export function JoinRoom(props: IJoinRoomProps) {
     // connect to socket
     connectSocket();
 
-    setPlayerName(playerName);
+    setPlayerName(player);
 
     const socket = socketService.socket;
-    if (!playerName || playerName.trim() === "" || !socket) return;
+    if (!player || player.trim() === "" || !socket) return;
 
     setJoining(true);
 
     if (id) {
       // join room already created
       const joined = await gameService
-        .joinGameRoom(socket, playerName, id)
+        .joinGameRoom(socket, player, id)
         .catch((err) => {
           alert(err);
         });
@@ -89,7 +89,7 @@ export function JoinRoom(props: IJoinRoomProps) {
     } else {
       // create room
       const joined = await gameService
-        .joinGameRoom(socket, playerName)
+        .joinGameRoom(socket, player)
         .catch((err) => {
           alert(err);
         });
@@ -111,7 +111,7 @@ export function JoinRoom(props: IJoinRoomProps) {
         <h4>Entrez votre pseudo</h4>
         <RoomIdInput
           placeholder="Pseudo"
-          value={playerName}
+          value={player}
           onChange={handlePlayerNameChange}
         />
         <JoinButton type="submit" disabled={isJoining}>

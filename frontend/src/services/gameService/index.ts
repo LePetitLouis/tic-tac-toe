@@ -39,6 +39,14 @@ class GameService {
   public async onGameWin(socket: Socket, listiner: (message: string) => void) {
     socket.on("on_game_win", ({ message }) => listiner(message));
   }
+
+  public async playAgain(socket: Socket, players: string[]) {
+    socket.emit("play_again", players);
+  }
+
+  public async onPlayAgain(socket: Socket, listiner: (options: { again: boolean, players: string[] }) => void) {
+    socket.on("on_play_again", listiner);
+  }
 }
 
 export default new GameService();
