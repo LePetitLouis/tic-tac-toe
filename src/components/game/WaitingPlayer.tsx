@@ -40,7 +40,7 @@ export function WaitingPlayer() {
   const { roomId } = useContext(gameContext);
 
   const clipboard = () => {
-    const link = `http://localhost:3000/${roomId}`;
+    const link = `https://projet-tic-tac-toe.herokuapp.com/${roomId}`;
     navigator.clipboard.writeText(link).then(() => {
       console.log('Async: Copying to clipboard was successful!');
     }, function(err) {
