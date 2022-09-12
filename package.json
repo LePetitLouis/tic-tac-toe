@@ -4,7 +4,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "start": "nodemon",
+    "start": "nodemon --watch 'src' src/server.ts -L",
     "build": "tsc"
   },
   "dependencies": {
