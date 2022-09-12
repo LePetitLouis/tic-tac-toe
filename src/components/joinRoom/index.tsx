@@ -54,7 +54,7 @@ export function JoinRoom(props: IJoinRoomProps) {
   const { setInRoom, setRoomId, setPlayerName } = useContext(gameContext);
 
   const connectSocket = async () => {
-    await socketService.connect("https://morpion-online.herokuapp.com/").catch((err) => {
+    await socketService.connect("https://morpion-clone.herokuapp.com/").catch((err) => {
       console.log("Error: ", err);
     });
   };
