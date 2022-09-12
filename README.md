@@ -1,4 +1,7 @@
-# Tic Tac Toe Online Multiplayer Game
+# Getting Started with Nodejs Express Socket
 
-### How to run?
-You can use the README file inside the projects to run it locally.
+## Available Scripts
+
+In the project directory, you can run:
+
+### `npm start`
